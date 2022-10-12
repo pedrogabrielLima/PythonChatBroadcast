@@ -58,4 +58,5 @@ while True:
     s.send(to_send.encode())
 
 # close the socket
+print("Saindo do chat\n")
 s.close()
