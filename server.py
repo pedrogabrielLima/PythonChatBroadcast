@@ -1,63 +1,67 @@
 import socket
 from threading import Thread
 
-# server's IP address
+# Endereço IP do servidor
 SERVER_HOST = "192.168.0.6"
-SERVER_PORT = 5002 # port we want to use
-separator_token = "<SEP>" # we will use this to separate the client name & message
+# Porta de conexão do servidor
+SERVER_PORT = 5002
+# Utilizado para separar o nome do cliente da mensagem
+separator_token = "<SEP>"
 
-# initialize list/set of all connected client's sockets
+# Inicializa a lista de sockets de todos os clientes conectados
 client_sockets = set()
-# create a TCP socket
+# Cria um socket TCP
 s = socket.socket()
-# make the port as reusable port
+# Faz com que a porta seja reutilizada
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-# bind the socket to the address we specified
+# Faz o bind na porta e IP passados acima
 s.bind((SERVER_HOST, SERVER_PORT))
-# listen for upcoming connections
+# Inicia o listen para as conexões futuras
 s.listen(5)
 print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
 
 def listen_for_client(cs):
+
     """
-    This function keep listening for a message from `cs` socket
-    Whenever a message is received, broadcast it to all other connected clients
+    Essa função faz o listen das mensagens vindas do socket 'cs'
+    Independente de quando a mensagem é recebida, ela é enviada a todos
+    os clientes conectados.
     """
+
     while True:
         try:
-            # keep listening for a message from `cs` socket
+            # Continua fazendo o listening das mensagens vindas do socket 'cs'
             msg = cs.recv(1024).decode()
             print(msg.replace(separator_token, ": "))
         except Exception as e:
-            # client no longer connected
-            # remove it from the set
+            # Cliente não está mais conectado
+            # remover cliente da lista
             print(f"[!] Error: {e}")
             client_sockets.remove(cs)
         else:
-            # if we received a message, replace the <SEP> 
-            # token with ": " for nice printing
+            # Trocando o separador <SEP> para ": ", melhorando a visualização
             msg = msg.replace(separator_token, ": ")
-        # iterate over all connected sockets
+        # Percorre toda a lista de sockets dos clientes conectados
         for client_socket in client_sockets:
-            # and send the message
+            # Envia a mensagem
             client_socket.send(msg.encode())
 
 
 while True:
-    # we keep listening for new connections all the time
+    # Continua fazendo o listening das mensagens
     client_socket, client_address = s.accept()
     print(f"[+] {client_address} connected.")
-    # add the new connected client to connected sockets
+    # Adiciona o novo cliente conectado a lista de clientes
     client_sockets.add(client_socket)
-    # start a new thread that listens for each client's messages
+    # Inicia uma nova thread que executa o listen para a mensagem de cada cliente
     t = Thread(target=listen_for_client, args=(client_socket,))
-    # make the thread daemon so it ends whenever the main thread ends
+    # Cria uma trhead deamon para que quando a thead main terminar, ela também termine
     t.daemon = True
-    # start the thread
+    # Inicializa a thread
     t.start()
 
-# close client sockets
+# Fecha todos os sockets dos clientes
 for cs in client_sockets:
     cs.close()
-# close server socket
+# Fecha o socket do servidor
 s.close()

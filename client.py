@@ -4,59 +4,64 @@ from threading import Thread
 from datetime import datetime
 from colorama import Fore, init, Back
 
-# init colors
+# Inicializa a cor
 init()
 
-# set the available colors
-colors = [Fore.BLUE, Fore.CYAN, Fore.GREEN, Fore.LIGHTBLACK_EX, 
-    Fore.LIGHTBLUE_EX, Fore.LIGHTCYAN_EX, Fore.LIGHTGREEN_EX, 
-    Fore.LIGHTMAGENTA_EX, Fore.LIGHTRED_EX, Fore.LIGHTWHITE_EX, 
-    Fore.LIGHTYELLOW_EX, Fore.MAGENTA, Fore.RED, Fore.WHITE, Fore.YELLOW
+# Grupo das cores disponíveis
+colors = [
+    Fore.BLUE, Fore.CYAN, Fore.GREEN, Fore.LIGHTBLACK_EX, Fore.LIGHTBLUE_EX,
+    Fore.LIGHTCYAN_EX, Fore.LIGHTGREEN_EX, Fore.LIGHTMAGENTA_EX,
+    Fore.LIGHTRED_EX, Fore.LIGHTWHITE_EX, Fore.LIGHTYELLOW_EX, Fore.MAGENTA,
+    Fore.RED, Fore.WHITE, Fore.YELLOW
 ]
 
-# choose a random color for the client
+# Escolhe uma cor aleatória para o cliente
 client_color = random.choice(colors)
 
-# server's IP address
-# if the server is not on this machine, 
-# put the private (network) IP address (e.g 192.168.1.2)
+# Endereço IP do servidor
+# OBS.: Se o servidor não estiver na máquina local,
+# colocar o endereço IP da rede privada (ex: 192.168.1.2)
 SERVER_HOST = "192.168.0.6"
-SERVER_PORT = 5002 # server's port
-separator_token = "<SEP>" # we will use this to separate the client name & message
+# Porta de conexão com o servidor
+SERVER_PORT = 5002
 
-# initialize TCP socket
+# Utilizado para separar o nome do cliente da mensagem
+separator_token = "<SEP>"
+
+# Inicializa o socket TCP
 s = socket.socket()
-print(f"[*] Connecting to {SERVER_HOST}:{SERVER_PORT}...")
-# connect to the server
+print(f"[*] Conectando ao {SERVER_HOST}:{SERVER_PORT}...")
+# Conecta ao servidor
 s.connect((SERVER_HOST, SERVER_PORT))
-print("[+] Connected.")
-# prompt the client for a name
-name = input("Enter your name: ")
+print("[+] Conectado.")
+# Entrada do nome do cliente
+name = input("Digite seu nome: ")
 
+# Método listen para as mensagens
 def listen_for_messages():
     while True:
         message = s.recv(1024).decode()
         print("\n" + message)
 
-# make a thread that listens for messages to this client & print them
+# Cria uma thread para o método listen
 t = Thread(target=listen_for_messages)
-# make the thread daemon so it ends whenever the main thread ends
+# Cria uma trhead deamon para que quando a thead main terminar, ela também termine
 t.daemon = True
-# start the thread
+# Inicializa a thread
 t.start()
 
 while True:
-    # input message we want to send to the server
-    to_send =  input()
-    # a way to exit the program
+    # Entrada da mensagem a ser enviada para o servidor
+    to_send = input()
+    # Condição para sair do programa
     if to_send.lower() == 'q':
         break
-    # add the datetime, name & the color of the sender
-    date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S') 
+    # Adiciona o datetime, nome, e a cor de quem envia a mensagem
+    date_now = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
     to_send = f"{client_color}[{date_now}] {name}{separator_token}{to_send}{Fore.RESET}"
-    # finally, send the message
+    # Envia a mensagem
     s.send(to_send.encode())
 
-# close the socket
+# Fecha o socket
 print("Saindo do chat\n")
 s.close()
